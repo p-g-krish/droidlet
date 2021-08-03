@@ -72,10 +72,18 @@ class OfflineInstance():
                 pose_dict = json.load(file)
             src_pose = pose_dict[str(postData["srcFrame"])]
             cur_pose = pose_dict[str(postData["curFrame"])]
-            
+
             LP = LabelPropagate()
             res_labels = LP(src_img, src_depth, src_label, src_pose, cur_pose, cur_depth)
             print("label prop output shape:", res_labels.shape)
+            
+            np.save("osi", src_img)
+            np.save("osd", src_depth)
+            np.save("osl", src_label)
+            np.save("osp", src_pose)
+            np.save("ocp", cur_pose)
+            np.save("ocd", cur_depth)
+            np.save("or", res_labels)
 
             # Convert mask maps to mask points
             objects = {}
