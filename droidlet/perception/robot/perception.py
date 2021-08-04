@@ -2,6 +2,9 @@
 Copyright (c) Facebook, Inc. and its affiliates.
 """
 import time
+import os
+from pathlib import Path
+import numpy as np
 
 from droidlet.parallel import BackgroundTask
 from droidlet.perception.robot.handlers import (
@@ -56,6 +59,7 @@ class Perception:
         self.vision = self.setup_vision_handlers()
         self.audio = None
         self.tactile = None
+        self.depth_hash = None
 
         self.log_settings = {
             "image_resolution": 512,  # pixels
@@ -130,8 +134,18 @@ class Perception:
         resolution = self.log_settings["image_resolution"]
         quality = self.log_settings["image_quality"]
 
-
         serialized_image = rgb_depth.to_struct(resolution, quality)
+        depth_hash = hash(serialized_image["depth_og"])
+        if not self.depth_hash or self.depth_hash != depth_hash: 
+            self.depth_hash = depth_hash
+            folder_name = "annotation_data/depth"
+            src_depth_name = "src_depth.npy"
+            cur_depth_name = "cur_depth.npy"
+            Path(folder_name).mkdir(parents=True, exist_ok=True)
+            if cur_depth_name in os.listdir(folder_name): 
+                os.rename(os.path.join(folder_name, cur_depth_name), os.path.join(folder_name, src_depth_name))
+            np.save(os.path.join(folder_name, cur_depth_name), serialized_image["depth_og"])                
+
 
         if old_rgb_depth is not None:
             serialized_object_image = old_rgb_depth.to_struct(resolution, quality)

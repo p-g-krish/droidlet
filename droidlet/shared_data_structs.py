@@ -99,6 +99,7 @@ class RGBDepth:
         return {
             "rgb": base64.b64encode(rgb_data).decode("utf-8"),
             "depth_img": base64.b64encode(depth_img_data).decode("utf-8"),
+            "depth_og": base64.b64encode(depth.astype(int)).decode("utf-8"), 
             "depth_max": str(np.max(depth)),
             "depth_min": str(np.min(depth)),
         }

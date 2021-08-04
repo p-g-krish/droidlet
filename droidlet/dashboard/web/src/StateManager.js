@@ -486,6 +486,7 @@ class StateManager {
   }
 
   startLabelPropagation() {
+    console.log('label prop start')
     // Update categories and properties
     let prevObjects = this.prevFeedState.objects.filter(o => o.type === "annotate")
     for (let i in prevObjects) {
@@ -526,6 +527,7 @@ class StateManager {
   }
 
   labelPropagationReturn(res) {
+    console.log('lable prop retrun', res)
     this.refs.forEach((ref) => {
       if (ref instanceof LiveObjects) {
         for (let i in res) {

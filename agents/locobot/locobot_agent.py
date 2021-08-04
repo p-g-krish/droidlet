@@ -147,7 +147,8 @@ class LocobotAgent(LocoMCAgent):
 
         @sio.on("label_propagation")
         def label_propagation(sid, postData): 
-                        
+            
+            print('\n\n starting!')
             # Decode rgb map
             rgb_bytes = base64.b64decode(postData["prevRgbImg"])
             rgb_np = np.frombuffer(rgb_bytes, dtype=np.uint8)
@@ -169,6 +170,17 @@ class LocobotAgent(LocoMCAgent):
             src_depth = np.array(depth_imgs[0])
             cur_depth = np.array(depth_imgs[1])
 
+            print("\n\nright before depth reading")
+            a = np.load("annotation_data/depth/src_depth.npy")
+            depth_bytes = base64.b64decode(a)
+            depth_np = np.frombuffer(depth_bytes, dtype=np.uint64)
+            src_depth = depth_np.reshape((512, 512))
+            a = np.load("annotation_data/depth/cur_depth.npy")
+            depth_bytes = base64.b64decode(a)
+            depth_np = np.frombuffer(depth_bytes, dtype=np.uint64)
+            cur_depth = depth_np.reshape((512, 512))
+            print("\n\nright after depth reading")
+
             # Convert mask points to mask maps then combine them
             src_label = np.zeros((height, width)).astype(int)
             for n, o in enumerate(postData["objects"]): 
@@ -187,6 +199,7 @@ class LocobotAgent(LocoMCAgent):
             
             LP = LabelPropagate()
             res_labels = LP(src_img, src_depth, src_label, src_pose, cur_pose, cur_depth)
+            print(res_labels)
 
             # Convert mask maps to mask points
             objects = {}
@@ -201,6 +214,7 @@ class LocobotAgent(LocoMCAgent):
                 objects[i-1]["type"] = "annotate"
 
             # Returns an array of objects with updated masks
+            print("\n\n\nemitting")
             sio.emit("labelPropagationReturn", objects)
         
         @sio.on("save_rgb_seg")
@@ -233,7 +247,7 @@ class LocobotAgent(LocoMCAgent):
             im = Image.fromarray(src_img)
             im.save("annotation_data/rgb/{:05d}.jpg".format(postData["frameCount"]))
 
-            if postData["callback"]: 
+            if "callback" in postData and postData["callback"]: 
                 sio.emit("saveRgbSegCallback")
 
         # Adapted from coco_creator.ipynb
