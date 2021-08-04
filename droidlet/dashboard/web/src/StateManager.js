@@ -557,16 +557,16 @@ class StateManager {
     return (
       this.curFeedState.rgbImg && 
       this.curFeedState.depth && 
-      this.curFeedState.objects && 
+      this.curFeedState.objects.length > 0 && 
       this.curFeedState.pose && 
       this.prevFeedState.rgbImg && 
       this.prevFeedState.depth && 
-      this.prevFeedState.objects && 
+      this.prevFeedState.objects.length > 0 && 
       this.prevFeedState.pose && 
       !this.stateProcessed.rgbImg && 
       !this.stateProcessed.depth && 
       !this.stateProcessed.objects && 
-      !this.stateProcessed.pose  
+      !this.stateProcessed.pose 
     )
   }
 
