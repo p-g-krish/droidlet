@@ -1,5 +1,7 @@
 import numpy as np
 import time
+import os
+from pathlib import Path
 from droidlet.lowlevel.locobot.locobot_mover_utils import xyz_pyrobot_to_canonical_coords
 from droidlet.base_util import TICKS_PER_SEC
 
@@ -96,9 +98,19 @@ class RGBDepth:
 
         _, rgb_data = cv2.imencode(fmt, cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR), encode_param)
         _, depth_img_data = cv2.imencode(fmt, depth_img, encode_param)
+
+        depth_encoded = base64.b64encode(depth.astype(int)).decode("utf-8")
+        depth_hash = str(hash(depth_encoded))
+        filename = depth_hash + ".npy"
+        folder_name = "annotation_data/depth"
+        Path(folder_name).mkdir(parents=True, exist_ok=True)
+        if filename not in os.listdir(folder_name): 
+            np.save(os.path.join(folder_name, filename), depth_encoded)    
+
         return {
             "rgb": base64.b64encode(rgb_data).decode("utf-8"),
             "depth_img": base64.b64encode(depth_img_data).decode("utf-8"),
+            "depth_hash": depth_hash, 
             "depth_max": str(np.max(depth)),
             "depth_min": str(np.min(depth)),
         }

@@ -152,20 +152,24 @@ class LocobotAgent(LocoMCAgent):
             rgb_bytes = base64.b64decode(postData["prevRgbImg"])
             rgb_np = np.frombuffer(rgb_bytes, dtype=np.uint8)
             rgb_bgr = cv2.imdecode(rgb_np, cv2.IMREAD_COLOR)
-            rgb = cv2.cvtColor(rgb_bgr, cv2.COLOR_BGR2RGB)
-            src_img = np.array(rgb)
+            # rgb = cv2.cvtColor(rgb_bgr, cv2.COLOR_BGR2RGB)
+            src_img = np.array(rgb_bgr)
             height, width, _ = src_img.shape
 
             # Convert depth map to meters
             depth_imgs = []
             for i, depth in enumerate([postData["prevDepth"], postData["depth"]]): 
-                depth_encoded = depth["depthImg"]
-                depth_bytes = base64.b64decode(depth_encoded)
-                depth_np = np.frombuffer(depth_bytes, dtype=np.uint8)
-                depth_decoded = cv2.imdecode(depth_np, cv2.IMREAD_COLOR)
-                depth_unscaled = (255 - np.copy(depth_decoded[:,:,0]))
-                depth_scaled = depth_unscaled / 255 * (float(depth["depthMax"]) - float(depth["depthMin"]))
-                depth_imgs.append(depth_scaled)
+                # depth_encoded = depth["depthImg"]
+                # depth_bytes = base64.b64decode(depth_encoded)
+                # depth_np = np.frombuffer(depth_bytes, dtype=np.uint8)
+                # depth_decoded = cv2.imdecode(depth_np, cv2.IMREAD_COLOR)
+                # depth_unscaled = (255 - np.copy(depth_decoded[:,:,0]))
+                # depth_scaled = depth_unscaled / 255 * (float(depth["depthMax"]) - float(depth["depthMin"]))
+                # depth_imgs.append(depth_scaled)
+                a = np.load(os.path.join("annotation_data/depth", depth["depthHash"] + ".npy"))
+                depth_bytes = base64.b64decode(a)
+                depth_np = np.frombuffer(depth_bytes, dtype=np.uint64)
+                depth_imgs.append(depth_np.reshape((512, 512)))
             src_depth = np.array(depth_imgs[0])
             cur_depth = np.array(depth_imgs[1])
 
@@ -187,6 +191,16 @@ class LocobotAgent(LocoMCAgent):
             
             LP = LabelPropagate()
             res_labels = LP(src_img, src_depth, src_label, src_pose, cur_pose, cur_depth)
+            print(res_labels)
+            print(np.unique(res_labels, return_counts=True), res_labels)
+
+            np.save("asi.jpg", src_img)
+            np.save("asd.npy", src_depth)
+            np.save("acd.npy", cur_depth)
+            np.save("asl.npy", src_label)
+            np.save("asp.npy", src_pose)
+            np.save("acp.npy", cur_pose)
+            np.save("arl.npy", res_labels)
 
             # Convert mask maps to mask points
             objects = {}

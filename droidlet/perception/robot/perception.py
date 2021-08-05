@@ -2,6 +2,9 @@
 Copyright (c) Facebook, Inc. and its affiliates.
 """
 import time
+import os
+from pathlib import Path
+import numpy as np
 
 from droidlet.parallel import BackgroundTask
 from droidlet.perception.robot.handlers import (
@@ -130,9 +133,8 @@ class Perception:
         resolution = self.log_settings["image_resolution"]
         quality = self.log_settings["image_quality"]
 
-
         serialized_image = rgb_depth.to_struct(resolution, quality)
-
+        
         if old_rgb_depth is not None:
             serialized_object_image = old_rgb_depth.to_struct(resolution, quality)
         else:
@@ -143,6 +145,7 @@ class Perception:
         sio.emit("rgb", serialized_image["rgb"])
         sio.emit("depth", {
             "depthImg": serialized_image["depth_img"],
+            "depthHash": serialized_image["depth_hash"],
             "depthMax": serialized_image["depth_max"],
             "depthMin": serialized_image["depth_min"],
         })
