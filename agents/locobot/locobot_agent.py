@@ -411,16 +411,10 @@ class LocobotAgent(LocoMCAgent):
             train_data = dataset_name + "_train"
             test_data = dataset_name + "_test"
 
-            if train_data in DatasetCatalog.list(): 
-                DatasetCatalog.remove(train_data)
-            if train_data in MetadataCatalog.list(): 
-                MetadataCatalog.remove(train_data)
+            DatasetCatalog.clear()
+            MetadataCatalog.clear()
             register_coco_instances(train_data, {}, train_path, image_dir)
-            if test_data in DatasetCatalog.list(): 
-                DatasetCatalog.remove(test_data)
-            if test_data in MetadataCatalog.list(): 
-                MetadataCatalog.remove(test_data)
-            register_coco_instances(test_data, {}, train_path, image_dir)
+            register_coco_instances(test_data, {}, test_path, image_dir)
 
             MetadataCatalog.get(train_data)
             coco_yaml = "COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"
@@ -430,6 +424,7 @@ class LocobotAgent(LocoMCAgent):
             cfg.DATASETS.TRAIN = (train_data,)
             cfg.DATASETS.TEST = ()
             cfg.DATALOADER.NUM_WORKERS = 2
+            cfg.MODEL.ROI_HEADS.NUM_CLASSES = len(categories)
             cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
             cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(coco_yaml)  # Let training initialize from model zoo
             cfg.OUTPUT_DIR = output_path
