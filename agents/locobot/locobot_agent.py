@@ -19,6 +19,7 @@ from pathlib import Path
 import json
 from pycococreatortools import pycococreatortools
 from sklearn.model_selection import train_test_split
+import shutil
 
 from detectron2 import model_zoo
 from detectron2.config import get_cfg
@@ -98,6 +99,8 @@ class LocobotAgent(LocoMCAgent):
         # list of (prob, default function) pairs
         self.visible_defaults = [(1.0, default_behaviors.explore)]
         self.interaction_logger = InteractionLogger()
+        shutil.rmtree("annotation_data/rgb")
+        shutil.rmtree("annotation_data/seg")
         
     def init_event_handlers(self):
         super().init_event_handlers()
