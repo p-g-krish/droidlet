@@ -140,6 +140,7 @@ PolymetisControllerServerImpl::ControlUpdate(ServerContext *context,
                                              const RobotState *robot_state,
                                              TorqueCommand *torque_command) {
   // Check if last update is stale
+  std::cout << "a" << std::endl;
   if (!validRobotContext()) {
     std::cout
         << "Warning: Interrupted control update greater than threshold of "
@@ -148,6 +149,7 @@ PolymetisControllerServerImpl::ControlUpdate(ServerContext *context,
     custom_controller_context_.status = TERMINATING;
   }
 
+  std::cout << "b" << std::endl;
   // Parse robot state
   auto timestamp_msg = robot_state->timestamp();
   rs_timestamp_[0] = timestamp_msg.seconds();
@@ -158,12 +160,14 @@ PolymetisControllerServerImpl::ControlUpdate(ServerContext *context,
     rs_motor_torques_measured_[i] = robot_state->motor_torques_measured(i);
     rs_motor_torques_external_[i] = robot_state->motor_torques_external(i);
   }
+  std::cout << "c" << std::endl;
 
   // Lock to prevent 1) controller updates while controller is running; 2)
   // external termination during controller selection, which might cause loading
   // of a uninitialized default controller
   custom_controller_context_.controller_mtx.lock();
 
+  std::cout << "d" << std::endl;
   // Update episode markers
   if (custom_controller_context_.status == READY) {
     // First step of episode: update episode marker
@@ -181,6 +185,7 @@ PolymetisControllerServerImpl::ControlUpdate(ServerContext *context,
         << "Terminating custom controller, switching to default controller."
         << std::endl;
   }
+  std::cout << "e" << std::endl;
 
   // Select controller
   torch::jit::script::Module *controller;
@@ -189,16 +194,23 @@ PolymetisControllerServerImpl::ControlUpdate(ServerContext *context,
   } else {
     controller = &robot_client_context_.default_controller;
   }
+  std::cout << "f0" << std::endl;
 
+  auto tmp = controller->forward(input_);
+  std::cout << "f0.5" << std::endl;
   // Step controller & generate torque command response
   c10::Dict<torch::jit::IValue, torch::jit::IValue> controller_state_dict =
-      controller->forward(input_).toGenericDict();
+      tmp.toGenericDict();
+  std::cout << "f1" << std::endl;
 
   // Unlock
   custom_controller_context_.controller_mtx.unlock();
+  std::cout << "f2" << std::endl;
 
   torch::jit::IValue key = torch::jit::IValue("joint_torques");
+  std::cout << "f3" << std::endl;
   torch::Tensor desired_torque = controller_state_dict.at(key).toTensor();
+  std::cout << "g" << std::endl;
 
   for (int i = 0; i < num_dofs_; i++) {
     torque_command->add_joint_torques(desired_torque[i].item<float>());
@@ -212,6 +224,7 @@ PolymetisControllerServerImpl::ControlUpdate(ServerContext *context,
         torque_command->joint_torques(i));
   }
   robot_state_buffer_.append(robot_state_copy);
+  std::cout << "h" << std::endl;
 
   // Update timestep & check termination
   if (custom_controller_context_.status == RUNNING) {
@@ -222,6 +235,7 @@ PolymetisControllerServerImpl::ControlUpdate(ServerContext *context,
   }
 
   robot_client_context_.last_update_ns = getNanoseconds();
+  std::cout << "i" << std::endl;
 
   return Status::OK;
 }
