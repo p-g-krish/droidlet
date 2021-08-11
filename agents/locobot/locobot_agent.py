@@ -319,10 +319,11 @@ class LocobotAgent(LocoMCAgent):
         @sio.on("save_categories_properties")
         def save_categories_properties(sid, categories, properties): 
 
-            # Load existing categories & properties
+            # Create new versioned models folder
             models_dir = "annotation_data/model"
-            model_names = os.listdir(models_dir)
-            model_nums = list(map(lambda x: int(x.split("v")[1]), model_names))
+            model_files = os.listdir(models_dir)
+            model_dirs = list(filter(lambda n: os.path.isdir(os.path.join(models_dir, n)), model_files))
+            model_nums = list(map(lambda x: int(x.split("v")[1]), model_dirs))
             cur_model_num = max(model_nums) + 1
             model_dir = os.path.join(models_dir, "v" + str(cur_model_num))
             Path(model_dir).mkdir(parents=True, exist_ok=True)
